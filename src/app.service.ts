@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+/**
+ * AppService ангилал нь аппликейшний үндсэн үйлчилгээг хангана.
+ */
 @Injectable()
-export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-  }
-}
+export class AppService {}

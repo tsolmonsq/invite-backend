@@ -1,101 +1,131 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 
+/**
+ * EventService нь үйл явдалтай холбоотой бизнес логик болон өгөгдлийн сангийн үйл ажиллагааг хариуцна.
+ */
 @Injectable()
 export class EventService {
+  /**
+   * EventService-ийн конструктор.
+   * 
+   * @param {Repository<Event>} eventRepository - Үйл явдалтай холбоотой өгөгдлийн сангийн сангимт.
+   */
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
   ) {}
 
   /**
-   * Create a new event
-   * @param createEventDto Data Transfer Object for creating an event
+   * Шинэ үйл явдал үүсгэх.
+   * 
+   * @param {CreateEventDto} createEventDto - Үйл явдлын өгөгдлийг агуулсан DTO.
+   * @returns {Promise<Event>} Үүсгэсэн үйл явдал.
+   * @throws {InternalServerErrorException} Үүсгэх явцад алдаа гарвал.
    */
   async create(createEventDto: CreateEventDto): Promise<Event> {
     try {
       const event = this.eventRepository.create(createEventDto);
       return await this.eventRepository.save(event);
     } catch (error) {
-      console.error('Error creating event:', error);
-      throw new InternalServerErrorException('Failed to create event');
+      console.error('Үйл явдал үүсгэхэд алдаа гарлаа:', error);
+      throw new InternalServerErrorException('Үйл явдал үүсгэж чадсангүй');
     }
   }
 
   /**
-   * Fetch all events
+   * Бүх үйл явдлыг авах.
+   * 
+   * @returns {Promise<Event[]>} Үйл явдлын жагсаалт.
+   * @throws {InternalServerErrorException} Жагсаалт авах явцад алдаа гарвал.
    */
   async findAll(): Promise<Event[]> {
     try {
       return await this.eventRepository.find({
-        relations: ['guests'], // Include guests in the response
+        relations: ['guests'], // Холбогдсон зочдыг хамааруулж авна.
       });
     } catch (error) {
-      console.error('Error fetching events:', error);
-      throw new InternalServerErrorException('Failed to fetch events');
+      console.error('Үйл явдлын жагсаалт авахад алдаа гарлаа:', error);
+      throw new InternalServerErrorException('Үйл явдлыг авахад алдаа гарлаа');
     }
   }
 
   /**
-   * Fetch a single event by ID
-   * @param id Event ID
+   * Тодорхой ID-тай үйл явдлыг авах.
+   * 
+   * @param {number} id - Үйл явдлын ID.
+   * @returns {Promise<Event>} Олдсон үйл явдал.
+   * @throws {NotFoundException} Хэрэв үйл явдал олдохгүй бол.
+   * @throws {InternalServerErrorException} Авчрах явцад алдаа гарвал.
    */
   async findOne(id: number): Promise<Event> {
     try {
       const event = await this.eventRepository.findOne({
         where: { id },
-        relations: ['guests'], // Include guests in the response
+        relations: ['guests'], // Холбогдсон зочдыг хамааруулж авна.
       });
       if (!event) {
-        throw new NotFoundException(`Event with ID ${id} not found`);
+        throw new NotFoundException(`${id} ID-тай үйл явдал олдсонгүй`);
       }
       return event;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error('Error fetching event:', error);
-      throw new InternalServerErrorException('Failed to fetch event');
+      console.error('Үйл явдал авахад алдаа гарлаа:', error);
+      throw new InternalServerErrorException('Үйл явдал авахад алдаа гарлаа');
     }
   }
 
   /**
-   * Update an existing event by ID
-   * @param id Event ID
-   * @param updateEventDto Data Transfer Object for updating an event
+   * Үйл явдлыг шинэчлэх.
+   * 
+   * @param {number} id - Шинэчлэх үйл явдлын ID.
+   * @param {UpdateEventDto} updateEventDto - Шинэчлэх өгөгдлийг агуулсан DTO.
+   * @returns {Promise<Event>} Шинэчлэгдсэн үйл явдал.
+   * @throws {NotFoundException} Хэрэв үйл явдал олдохгүй бол.
+   * @throws {InternalServerErrorException} Шинэчлэх явцад алдаа гарвал.
    */
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     try {
-      const event = await this.findOne(id); // Ensure event exists
+      const event = await this.findOne(id); // Үйл явдал байгаа эсэхийг шалгах.
       Object.assign(event, updateEventDto);
       return await this.eventRepository.save(event);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error('Error updating event:', error);
-      throw new InternalServerErrorException('Failed to update event');
+      console.error('Үйл явдал шинэчлэхэд алдаа гарлаа:', error);
+      throw new InternalServerErrorException('Үйл явдал шинэчлэхэд алдаа гарлаа');
     }
   }
 
   /**
-   * Remove an event by ID
-   * @param id Event ID
+   * Үйл явдлыг устгах.
+   * 
+   * @param {number} id - Устгах үйл явдлын ID.
+   * @returns {Promise<void>} Амжилттай устгасан тохиолдолд утга буцаахгүй.
+   * @throws {NotFoundException} Хэрэв үйл явдал олдохгүй бол.
+   * @throws {InternalServerErrorException} Устгах явцад алдаа гарвал.
    */
   async remove(id: number): Promise<void> {
     try {
-      const event = await this.findOne(id); // Ensure event exists
+      const event = await this.findOne(id); // Үйл явдал байгаа эсэхийг шалгах.
       await this.eventRepository.remove(event);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error('Error deleting event:', error);
-      throw new InternalServerErrorException('Failed to delete event');
+      console.error('Үйл явдал устгахад алдаа гарлаа:', error);
+      throw new InternalServerErrorException('Үйл явдал устгахад алдаа гарлаа');
     }
   }
 }
