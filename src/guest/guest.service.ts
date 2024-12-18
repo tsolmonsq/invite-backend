@@ -79,6 +79,7 @@ export class GuestService {
         where: { id },
         relations: ['event'],
       });
+      console.log('Guest fetched:', guest);
       if (!guest) {
         throw new NotFoundException(`${id} ID-тай зочин олдсонгүй.`);
       }
