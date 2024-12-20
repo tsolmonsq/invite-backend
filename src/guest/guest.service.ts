@@ -30,6 +30,12 @@ export class GuestService {
     private readonly eventRepository: Repository<Event>,
   ) {}
 
+
+  async createMany(createGuestDtos: CreateGuestDto[]) {
+    const guests = this.guestRepository.create(createGuestDtos);
+    return await this.guestRepository.save(guests);
+  }
+
   /**
    * Шинэ зочин үүсгэх.
    * 
@@ -61,6 +67,9 @@ export class GuestService {
         throw new InternalServerErrorException('Failed to create guest');
       }
     }
+
+
+    
 
   /**
    * Бүх зочдыг авах.

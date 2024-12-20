@@ -33,9 +33,11 @@ export class GuestController {
    * @returns {Promise<Guest>} Үүсгэсэн зочны мэдээлэл.
    */
   @Post()
-  create(@Body() createGuestDto: CreateGuestDto) {
-    return this.guestService.create(createGuestDto);
+  create(@Body() createGuestDtos: CreateGuestDto[]) {
+    return this.guestService.createMany(createGuestDtos);
   }
+
+  
 
   /**
    * Бүх зочдын жагсаалтыг авах эндпойнт.
