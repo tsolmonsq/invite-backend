@@ -34,5 +34,6 @@ import { Event } from './entities/event.entity';
      */
     EventService,
   ],
+  exports: [TypeOrmModule],
 })
 export class EventModule {}

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Guest } from './entities/guest.entity';
+import { Event } from 'src/event/entities/event.entity';
 import { GuestService } from './guest.service';
 import { GuestController } from './guest.controller';
 
@@ -18,7 +19,7 @@ import { GuestController } from './guest.controller';
      * @description Зочдын өгөгдлийн сантай холбоотой бүх үйл ажиллагааг 
      * удирдахад хэрэглэгдэнэ.
      */
-    TypeOrmModule.forFeature([Guest]),
+    TypeOrmModule.forFeature([Guest, Event]),
   ],
   controllers: [
     /**

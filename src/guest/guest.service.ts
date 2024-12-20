@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Guest } from './entities/guest.entity';
+import { Event } from 'src/event/entities/event.entity';
 import { CreateGuestDto } from './dto/ create-guest.dto';
 import { UpdateGuestDto } from './dto/update-guest.dto';
 
@@ -25,6 +26,8 @@ export class GuestService {
   constructor(
     @InjectRepository(Guest)
     private readonly guestRepository: Repository<Guest>,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
   ) {}
 
   /**
@@ -35,16 +38,29 @@ export class GuestService {
    * @throws {InternalServerErrorException} Зочин үүсгэх явцад алдаа гарвал.
    */
   async create(createGuestDto: CreateGuestDto): Promise<Guest> {
-    try {
-      const guest = this.guestRepository.create(createGuestDto);
-      return await this.guestRepository.save(guest);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Зочин үүсгэхэд алдаа гарлаа',
-        error.message,
-      );
+      try {
+        let event = null;
+        if (createGuestDto.eventId) {
+          event = await this.eventRepository.findOne({ where: { id: createGuestDto.eventId } });
+          if (!event) {
+            throw new NotFoundException(`Event with ID ${createGuestDto.eventId} not found`);
+          }
+        }
+  
+        const guest = this.guestRepository.create({
+          ...createGuestDto,
+          event, 
+        });
+    
+        return await this.guestRepository.save(guest);
+      } catch (error) {
+        console.error('Error creating guest:', error);
+        if (error instanceof NotFoundException) {
+          throw error;
+        }
+        throw new InternalServerErrorException('Failed to create guest');
+      }
     }
-  }
 
   /**
    * Бүх зочдыг авах.
@@ -54,9 +70,12 @@ export class GuestService {
    */
   async findAll(): Promise<Guest[]> {
     try {
-      return await this.guestRepository.find({
-        relations: ['event'], // Зочныг үйл явдалтай холбож байна.
-      });
+      const guests = await this.guestRepository
+        .createQueryBuilder('guest')
+        .leftJoinAndSelect('guest.event', 'event')
+        .getMany();
+      console.log('Guests with events (QueryBuilder):', JSON.stringify(guests, null, 2));
+      return guests;
     } catch (error) {
       throw new InternalServerErrorException(
         'Зочдын жагсаалт авахад алдаа гарлаа',
@@ -64,7 +83,6 @@ export class GuestService {
       );
     }
   }
-
   /**
    * Тодорхой ID-тай зочин авах.
    * 
@@ -103,16 +121,34 @@ export class GuestService {
    * @returns {Promise<Guest>} Шинэчлэгдсэн зочны мэдээлэл.
    * @throws {NotFoundException} Хэрэв зочин олдохгүй бол.
    * @throws {InternalServerErrorException} Шинэчлэх явцад алдаа гарвал.
-   */
+  */
   async update(id: number, updateGuestDto: UpdateGuestDto): Promise<Guest> {
     try {
-      const guest = await this.findOne(id); // Зочин байгаа эсэхийг шалгах.
-      Object.assign(guest, updateGuestDto);
-      return await this.guestRepository.save(guest);
+      const guest = await this.findOne(id);
+
+      let event = guest.event;
+      if (updateGuestDto.eventId !== undefined) {
+        event = await this.eventRepository.findOne({
+          where: { id: updateGuestDto.eventId },
+        });
+
+        if (!event) {
+          throw new NotFoundException(`Event with ID ${updateGuestDto.eventId} not found`);
+        }
+      }
+
+      const updatedGuest = {
+        ...guest,
+        ...updateGuestDto,
+        event,
+      };
+
+      return await this.guestRepository.save(updatedGuest);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
+      console.error('Error updating guest:', error);
       throw new InternalServerErrorException(
         'Зочныг шинэчлэхэд алдаа гарлаа',
         error.message,
