@@ -56,7 +56,7 @@ export class Event {
    * @decorator Column - 50 тэмдэгт хүртэл урттай мөр.
    */
   @Column({ length: 50 })
-  image: string;
+  image: string | null;
 
   /**
    * Үйл явдлын эхлэх огноо.
@@ -75,6 +75,9 @@ export class Event {
    */
   @Column({ length: 100 })
   endDate: string;
+
+  @Column({ length: 100, type: 'varchar', nullable: true })
+  address: string | null;
 
   /**
    * Үйл явдалд харьяалагдах зочдын жагсаалт.

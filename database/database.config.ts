@@ -23,5 +23,5 @@ export const databaseConfig: TypeOrmModuleOptions = {
   password: 'root_password', 
   database: 'invite', 
   entities: [User, Event, Guest], 
-  synchronize: false, 
+  synchronize: true, 
 };

@@ -33,13 +33,17 @@ export class EventService {
    */
   async create(createEventDto: CreateEventDto): Promise<Event> {
     try {
-      const event = this.eventRepository.create(createEventDto);
+      const event = this.eventRepository.create({
+        ...createEventDto,
+        image: createEventDto.image || 'default-image-url', 
+      });
       return await this.eventRepository.save(event);
     } catch (error) {
       console.error('Үйл явдал үүсгэхэд алдаа гарлаа:', error);
-      throw new InternalServerErrorException('Үйл явдал үүсгэж чадсангүй');
+      throw new InternalServerErrorException('Үйл явдал үүсгэж чадсангүй', error);
     }
   }
+  
 
   /**
    * Бүх үйл явдлыг авах.

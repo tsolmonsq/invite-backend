@@ -72,7 +72,7 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsString()
   @Length(1, 255)
-  image: string;
+  image?: string;
 
   /**
    * Үйл явдлын эхлэх огноо.
@@ -103,4 +103,8 @@ export class CreateEventDto {
   @IsDateString()
   @Length(1, 100)
   endDate: string;
+
+  @ApiProperty()
+  @Length(1, 100)
+  address: string;
 }
